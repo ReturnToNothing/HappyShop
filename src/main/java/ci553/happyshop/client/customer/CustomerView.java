@@ -83,23 +83,37 @@ public class CustomerView  {
         viewWindow=window;// Sets viewWindow to this window for future reference and management.
     }
 
+
     private VBox createSearchPage() {
         Label laPageTitle = new Label("Customer Client");
         laPageTitle.setStyle(UIStyle.labelTitleStyle);
 
+        // Icons for each button
+        ImageView ivSearch = new ImageView("magnifier.png");
+        ivSearch.setFitHeight(20f);
+        ivSearch.setFitWidth(20f);
+        ivSearch.setPreserveRatio(true);
+
+        ImageView ivClear = new ImageView("clear.png");
+        ivClear.setFitHeight(15f);
+        ivClear.setFitWidth(15f);
+        ivClear.setPreserveRatio(true);
+
         // Cancellation button that clears the text field
-        Button btnClear = new Button("❌");
+        Button btnClear = new Button();
+        btnClear.setGraphic(ivClear);
         btnClear.setPrefSize(10f, 15f);
         btnClear.setStyle(UIStyle.cancelButtonStyle);
         btnClear.setOnAction(this::buttonClicked);
         btnClear.getProperties().put("Action", "Clear");
 
         // Search button; finds product regardless of it's ID/Name
-        Button btnSearch = new Button("🔍");
+        Button btnSearch = new Button();
+        btnSearch.setGraphic(ivSearch);
         btnSearch.setPrefSize(20f, 34f);
         btnSearch.setStyle(UIStyle.searchButtonStyle);
         btnSearch.setOnAction(this::buttonClicked);
-        btnClear.getProperties().put("Action", "Search");
+        btnSearch.getProperties().put("Action", "Search");
 
         // Horizontal container for both btnClear and btnSearch
         HBox hbSearch = new HBox(5, btnClear, btnSearch);
