@@ -1,8 +1,11 @@
 package ci553.happyshop.client.customer;
 
+import ci553.happyshop.catalogue.Product;
 import ci553.happyshop.utility.UIStyle;
 import ci553.happyshop.utility.WinPosManager;
 import ci553.happyshop.utility.WindowBounds;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -15,6 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -37,8 +41,12 @@ public class CustomerView  {
     private VBox vbTrolleyPage;  //vbTrolleyPage and vbReceiptPage will swap with each other when need
     private VBox vbReceiptPage;
 
+    private ObservableList<Product> obeProductList; // observable product list (forked from warehouse)
+
     TextField tfId; //for user input on the search page. Made accessible so it can be accessed or modified by CustomerModel
     TextField tfName; //for user input on the search page. Made accessible so it can be accessed by CustomerModel
+    TextField tfKeyword; // user input on search page, accessible by the CustomerModel, able to search regardless name or id
+    ListView<Product> obrLvProducts; // A ListView observes the product list (forked from warehouse)
 
     //four controllers needs updating when program going on
     private ImageView ivProduct; //image area in searchPage
@@ -76,49 +84,62 @@ public class CustomerView  {
     }
 
     private VBox createSearchPage() {
-        Label laPageTitle = new Label("Search by Product ID/Name");
+        Label laPageTitle = new Label("Customer Client");
         laPageTitle.setStyle(UIStyle.labelTitleStyle);
 
-        Label laId = new Label("ID:      ");
-        laId.setStyle(UIStyle.labelStyle);
-        tfId = new TextField();
-        tfId.setPromptText("eg. 0001");
-        tfId.setStyle(UIStyle.textFiledStyle);
-        HBox hbId = new HBox(10, laId, tfId);
+        // Cancellation button that clears the text field
+        Button btnClear = new Button("❌");
+        btnClear.setPrefSize(10f, 15f);
+        btnClear.setStyle(UIStyle.cancelButtonStyle);
+        btnClear.setOnAction(this::buttonClicked);
+        btnClear.getProperties().put("Action", "Clear");
 
-        Label laName = new Label("Name:");
-        laName.setStyle(UIStyle.labelStyle);
-        tfName = new TextField();
-        tfName.setPromptText("implement it if you want");
-        tfName.setStyle(UIStyle.textFiledStyle);
-        HBox hbName = new HBox(10, laName, tfName);
-
-        Label laPlaceHolder = new Label(  " ".repeat(15)); //create left-side spacing so that this HBox aligns with others in the layout.
-        Button btnSearch = new Button("Search");
-        btnSearch.setStyle(UIStyle.buttonStyle);
+        // Search button; finds product regardless of it's ID/Name
+        Button btnSearch = new Button("🔍");
+        btnSearch.setPrefSize(20f, 34f);
+        btnSearch.setStyle(UIStyle.searchButtonStyle);
         btnSearch.setOnAction(this::buttonClicked);
-        Button btnAddToTrolley = new Button("Add to Trolley");
-        btnAddToTrolley.setStyle(UIStyle.buttonStyle);
-        btnAddToTrolley.setOnAction(this::buttonClicked);
-        HBox hbBtns = new HBox(10, laPlaceHolder,btnSearch, btnAddToTrolley);
+        btnClear.getProperties().put("Action", "Search");
 
-        ivProduct = new ImageView("imageHolder.jpg");
-        ivProduct.setFitHeight(60);
-        ivProduct.setFitWidth(60);
-        ivProduct.setPreserveRatio(true); // Image keeps its original shape and fits inside 60×60
-        ivProduct.setSmooth(true); //make it smooth and nice-looking
+        // Horizontal container for both btnClear and btnSearch
+        HBox hbSearch = new HBox(5, btnClear, btnSearch);
+        hbSearch.setAlignment(Pos.CENTER);
 
-        lbProductInfo = new Label("Thank you for shopping with us.");
-        lbProductInfo.setWrapText(true);
-        lbProductInfo.setMinHeight(Label.USE_PREF_SIZE);  // Allow auto-resize
-        lbProductInfo.setStyle(UIStyle.labelMulLineStyle);
-        HBox hbSearchResult = new HBox(5, ivProduct, lbProductInfo);
-        hbSearchResult.setAlignment(Pos.CENTER_LEFT);
+        // Unified search input;
+        tfKeyword = new TextField();
+        tfKeyword.setPromptText("Search product by Name/ID");
+        tfKeyword.setStyle(UIStyle.textFiledStyle);
+        tfKeyword.textProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("TextField changes from " + oldValue + " to " + newValue);
+            // If there's any input, make the clear button appear
+            if (!newValue.isBlank()) {
+                btnClear.opacityProperty().set(1);
+                btnClear.setDisable(false);
+            } else {
+                btnClear.opacityProperty().set(0);
+                btnClear.setDisable(true);
+            }
+        });
 
-        VBox vbSearchPage = new VBox(15, laPageTitle, hbId, hbName, hbBtns, hbSearchResult);
+        // Anchor container for a flexible layer of anchoring nodes
+        AnchorPane apSearch = new AnchorPane();
+        apSearch.getChildren().addAll(tfKeyword, hbSearch);
+
+        // Had to manually set the anchors to allow it from stretching on four sides
+        AnchorPane.setTopAnchor(tfKeyword, 0.0);
+        AnchorPane.setBottomAnchor(tfKeyword, 0.0);
+        AnchorPane.setLeftAnchor(tfKeyword, 0.0);
+        AnchorPane.setRightAnchor(tfKeyword, 0.0);
+
+        // Same configuration applies on every node, ensuring the hbSearch is pinned on the right side
+        AnchorPane.setRightAnchor(hbSearch, 0.0);
+        AnchorPane.setTopAnchor(hbSearch, 0.0);
+        AnchorPane.setBottomAnchor(hbSearch, 1.0);
+
+        VBox vbSearchPage = new VBox(15, laPageTitle, apSearch);
         vbSearchPage.setPrefWidth(COLUMN_WIDTH);
         vbSearchPage.setAlignment(Pos.TOP_CENTER);
-        vbSearchPage.setStyle("-fx-padding: 15px;");
+        vbSearchPage.setStyle("-fx-padding: 5px");
 
         return vbSearchPage;
     }
