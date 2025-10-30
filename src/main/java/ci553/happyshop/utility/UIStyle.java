@@ -57,6 +57,11 @@ public record UIStyle() {
 
     public static final String buttonStyle= "-fx-font-size: 15";
 
+    public static final String cancelButtonStyle = "-fx-background-color: transparent;" +
+            "-fx-opacity: 0";
+
+    public static final String searchButtonStyle = "-fx-background-color: purple";
+
     public static final String rootStyle = "-fx-padding: 8px; " +
             "-fx-background-color: lightgreen";
 
