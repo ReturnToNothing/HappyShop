@@ -6,6 +6,7 @@ import ci553.happyshop.utility.WinPosManager;
 import ci553.happyshop.utility.WindowBounds;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -21,6 +22,7 @@ import javafx.stage.Stage;
 import javax.security.auth.login.AccountNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * The CustomerView is separated into two sections by a line :
@@ -205,18 +207,35 @@ public class CustomerView  {
         return vbReceiptPage;
     }
 
-
     private void buttonClicked(ActionEvent event) {
         try{
-            Button btn = (Button)event.getSource();
-            String action = btn.getText();
-            if(action.equals("Add to Trolley")){
-                showTrolleyOrReceiptPage(vbTrolleyPage); //ensure trolleyPage shows if the last customer did not close their receiptPage
+            Button btn = (Button) event.getSource();
+            ObservableMap<Object, Object> properties = btn.getProperties();
+            /**
+             * Using custom properties over text for invoking the Controller in the following reasons:
+             * 1. Text becomes unreliable once it's changes.
+             * 2. Unable to display graphic if the text is specified.
+             * 3. properties can hold multiple actions rather than one.
+             */
+            /* Iterate through the map of properties */
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+
+                /* evaluate that the key & value are string type */
+                if (key instanceof String && value instanceof String) {
+                    if (key.equals("Action")) {
+                        switch ((String) value) {
+                            case "Clear" : {
+                                tfKeyword.clear();
+                            }
+                            default:
+                                cusController.doAction((String) value);
+                                break;
+                        }
+                    }
+                }
             }
-            if(action.equals("OK & Close")){
-                showTrolleyOrReceiptPage(vbTrolleyPage);
-            }
-            cusController.doAction(action);
         }
         catch(SQLException e){
             e.printStackTrace();
