@@ -85,7 +85,6 @@ public class CustomerView  {
         viewWindow=window;// Sets viewWindow to this window for future reference and management.
     }
 
-
     private VBox createSearchPage() {
         Label laPageTitle = new Label("Customer Client");
         laPageTitle.setStyle(UIStyle.labelTitleStyle);
@@ -112,7 +111,7 @@ public class CustomerView  {
         // Search button; finds product regardless of it's ID/Name
         Button btnSearch = new Button();
         btnSearch.setGraphic(ivSearch);
-        btnSearch.setPrefSize(20f, 34f);
+        btnSearch.setPrefSize(20f, 35f);
         btnSearch.setStyle(UIStyle.searchButtonStyle);
         btnSearch.setOnAction(this::buttonClicked);
         btnSearch.getProperties().put("Action", "Search");
@@ -137,6 +136,30 @@ public class CustomerView  {
             }
         });
 
+        // Observable object for containing products.
+        obeProductList = FXCollections.observableArrayList();
+
+        // ListView for displaying products with appealing UI
+        obrLvProducts = new ListView<>(obeProductList); // updates the list from the observer
+        obrLvProducts.setPrefHeight(HEIGHT - 100);
+        obrLvProducts.setFixedCellSize(50);
+        obrLvProducts.setStyle(UIStyle.listViewStyle);
+
+        // Custom cell factory for displaying customisable objects with image, buttons, text and more.
+        obrLvProducts.setCellFactory(param -> new ListCell<Product>() {
+            @Override
+            protected void updateItem(Product product, boolean empty) {
+                super.updateItem(product, empty);
+                if (empty || product == null) {
+                    setGraphic(null);
+                    System.out.println("setCellFactory - empty item");
+                } else {
+                    HBox hbProItem = CreateProductItem(product);
+                    setGraphic(hbProItem);
+                }
+            }
+        });
+
         // Anchor container for a flexible layer of anchoring nodes
         AnchorPane apSearch = new AnchorPane();
         apSearch.getChildren().addAll(tfKeyword, hbSearch);
@@ -152,7 +175,7 @@ public class CustomerView  {
         AnchorPane.setTopAnchor(hbSearch, 0.0);
         AnchorPane.setBottomAnchor(hbSearch, 1.0);
 
-        VBox vbSearchPage = new VBox(15, laPageTitle, apSearch);
+        VBox vbSearchPage = new VBox(15, laPageTitle, apSearch, obrLvProducts);
         vbSearchPage.setPrefWidth(COLUMN_WIDTH);
         vbSearchPage.setAlignment(Pos.TOP_CENTER);
         vbSearchPage.setStyle("-fx-padding: 5px");
@@ -243,7 +266,6 @@ public class CustomerView  {
             throw new RuntimeException(e);
         }
     }
-
 
     public void update(String imageName, String searchResult, String trolley, String receipt) {
 
