@@ -16,7 +16,7 @@ public class Product implements Comparable<Product> {
     private String proDescription;
     private String proImageName;
     private double unitPrice;
-    private int orderedQuantity =1; //The quantity of this product in the customer's order.
+    private int orderedQuantity =0; //The quantity of this product in the customer's order.
     private int stockQuantity;//
 
     /**
