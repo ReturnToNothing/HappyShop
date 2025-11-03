@@ -82,6 +82,21 @@ public record UIStyle() {
     public static final String labelMulLineStyle= "-fx-font-size: 16px; " +
             "-fx-background-color: lightpink";
 
+    public static final String labelPriceStyle = "-fx-font-size: 10px;" +
+            "-fx-text-fill: green";
+
+    public static final String labelIdStyle = "-fx-font-size: 10px;" +
+            "-fx-text-fill: purple";
+
+    public static final String labelInStockStyle = "-fx-font-size: 12px;" +
+            "-fx-text-fill: #0B7B3C";
+
+    public static final String labelLowStockStyle = "-fx-font-size: 12px;" +
+            "-fx-text-fill: #FFB14A";
+
+    public static final String labelOutOfStockStyle = "-fx-font-size: 12px;" +
+            "-fx-text-fill: #CC1C39";
+
     public static final String listViewStyle = "-fx-border-color: #ccc; " +
             "-fx-border-width: 1px; -fx-background-color: white; -fx-font-size: 14px;";
 
