@@ -39,7 +39,7 @@ public class DerbyRW implements DatabaseRW {
 
         // If still no products found, print a message
         if (productList.isEmpty()) {
-            System.out.println("Product " + keyword + " not found.");
+            //System.out.println("Product " + keyword + " not found.");
         }
         return productList;
     }
@@ -196,7 +196,6 @@ public class DerbyRW implements DatabaseRW {
 
         return insufficientProducts;
     }
-
 
     //warehouse edits an existing product
     public void updateProduct(String id, String des, double price, String iName, int stock) throws SQLException {
