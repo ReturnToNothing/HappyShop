@@ -109,7 +109,6 @@ public class PickerView  {
                     scene.setRoot(vbOrderDetailRoot); // switch to OrderDetailRoot
                     pickerController.doProgressing();
                     break;
-
                 case "Customer Collected":
                     pickerController.doCollected();
                     scene.setRoot(vbOrderMapRoot); // switch back to orderMapRoot
