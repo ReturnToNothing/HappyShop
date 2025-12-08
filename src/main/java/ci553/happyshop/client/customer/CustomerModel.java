@@ -21,6 +21,7 @@ import java.util.Map;
  * or create a subclass of CustomerModel and override specific methods where appropriate.
  */
 public class CustomerModel {
+    public RemoveProductNotifier proNotifier; //
     public CustomerView cusView;
     public DatabaseRW databaseRW; //Interface type, not specific implementation
                                   //Benefits: Flexibility: Easily change the database implementation.
@@ -36,6 +37,7 @@ public class CustomerModel {
     void doSearch() throws SQLException {
         String keyword = cusView.tfKeyword.getText().trim();
         // check if keyword isn't empty before querying
+
         if (!keyword.isEmpty()) {
             productList = databaseRW.searchProduct(keyword);
             if (!productList.isEmpty()) {
@@ -54,14 +56,26 @@ public class CustomerModel {
 
     void doAdd(Product product, int quantity) {
         if (product != null) {
+            // Ensure the product is present in the trolley before adjusting its quantity.
+            if (!trolleyList.contains(product)) {
+                trolleyList.add(product);
+            }
 
-            // Whenever a new product is on stock, assign into the trolley, otherwise increase it's quantity.
-            if ((product.getStockQuantity()) - quantity > 0) {
-                if (!trolleyList.contains(product)) {
-                    trolleyList.add(product);
-                }
+            // Calculate the actual number of items still available to be added
+            int availableQuantity = product.getStockQuantity() - product.getOrderedQuantity();
+
+            // Check if there is enough stock for the amount of quantity requested.
+            if (availableQuantity - quantity > 0) {
                 product.setOrderedQuantity(product.getOrderedQuantity() + quantity);
                 System.out.println("Added Product " + product.getProductDescription() + " Quantity Ordered: " + product.getOrderedQuantity());
+            } else {
+                // otherwise, set the ordered quantity by its intial quantity.
+                if (product.getStockQuantity() > 0) {
+                    product.setOrderedQuantity(product.getStockQuantity());
+                } else {
+                    product.setOrderedQuantity(quantity);
+                }
+                System.out.println("Added Product " + product.getProductDescription() + " Max Quantity Reached: " + product.getOrderedQuantity());
             }
         }  else {
             System.out.println("must search and get an available product before add to trolley");
@@ -71,8 +85,8 @@ public class CustomerModel {
 
     void doRemove(Product product) {
         if (product != null) {
-            trolleyList.remove(product);
             product.setOrderedQuantity(0);
+            trolleyList.remove(product);
             System.out.println("Removed Product " + product.getProductDescription());
         }  else {
             System.out.println("must select an existing product inside the trolley");
@@ -87,12 +101,15 @@ public class CustomerModel {
             // If any products are insufficient, the update will be rolled back.
             // If all products are sufficient, the database will be updated, and insufficientProducts will be empty.
             // Note: If the trolley is already organized (merged and sorted), grouping is unnecessary.
-            ArrayList<Product> groupedTrolley = groupProductsById(trolleyList);
-            ArrayList<Product> insufficientProducts= databaseRW.purchaseStocks(groupedTrolley);
+           // ArrayList<Product> groupedTrolley = groupProductsById(trolleyList);
+            // Grouping products by id for optimisation isn't necessary after merging existing products.
+            ArrayList<Product> insufficientProducts = databaseRW.purchaseStocks(trolleyList);
 
-            if(insufficientProducts.isEmpty()){ // If stock is sufficient for all products
+            System.out.println(insufficientProducts);
+
+            if(insufficientProducts.isEmpty()) { // If stock is sufficient for all products
                 //get OrderHub and tell it to make a new Order
-                OrderHub orderHub =OrderHub.getOrderHub();
+                OrderHub orderHub = OrderHub.getOrderHub();
                 Order theOrder = orderHub.newOrder(trolleyList);
                 trolleyList.clear();
                 orderSummary = "Order Summary";
@@ -104,50 +121,26 @@ public class CustomerModel {
                 );
                 System.out.println(displayTaReceipt);
             }
-            else{ // Some products have insufficient stock — build an error message to inform the customer
+            else { // Some products have insufficient stock — build an error message to inform the customer
+                orderSummary = "Checkout failed as one of the products have insufficient stock";
                 StringBuilder errorMsg = new StringBuilder();
                 for(Product p : insufficientProducts){
-                    errorMsg.append("\u2022 "+ p.getProductId()).append(", ")
+                    // Remove the present product with insufficient stock from the trolley list.
+                    trolleyList.remove(p);
+                    // Produce a proper error format for the error message
+                    errorMsg.append("\u2022 ").append(p.getProductId()).append(", ")
                             .append(p.getProductDescription()).append(" (Only ")
                             .append(p.getStockQuantity()).append(" available, ")
                             .append(p.getOrderedQuantity()).append(" requested)\n");
                 }
-
-                //TODO
-                // Add the following logic here:
-                // 1. Remove products with insufficient stock from the trolley.
-                // 2. Trigger a message window to notify the customer about the insufficient stock, rather than directly changing displayLaSearchResult.
-                //You can use the provided RemoveProductNotifier class and its showRemovalMsg method for this purpose.
-                //remember close the message window where appropriate (using method closeNotifierWindow() of RemoveProductNotifier class)
-              //  displayLaSearchResult = "Checkout failed due to insufficient stock for the following products:\n" + errorMsg.toString();
+                proNotifier.showRemovalMsg(errorMsg.toString());
                 System.out.println("stock is not enough");
             }
         }
         else{
-          //  displayTaTrolley = "Your trolley is empty";
             System.out.println("Your trolley is empty");
         }
         updateView();
-    }
-
-    /**
-     * Groups products by their productId to optimize database queries and updates.
-     * By grouping products, we can check the stock for a given `productId` once, rather than repeatedly
-     */
-    private ArrayList<Product> groupProductsById(ArrayList<Product> proList) {
-        Map<String, Product> grouped = new HashMap<>();
-        for (Product p : proList) {
-            String id = p.getProductId();
-            if (grouped.containsKey(id)) {
-                Product existing = grouped.get(id);
-                existing.setOrderedQuantity(existing.getOrderedQuantity() + p.getOrderedQuantity());
-            } else {
-                // Make a shallow copy to avoid modifying the original
-                grouped.put(id,new Product(p.getProductId(),p.getProductDescription(),
-                        p.getProductImageName(),p.getUnitPrice(),p.getStockQuantity()));
-            }
-        }
-        return new ArrayList<>(grouped.values());
     }
 
     void doCancel( ){
@@ -179,5 +172,4 @@ public class CustomerModel {
      // extra notes:
      //Path.toUri(): Converts a Path object (a file or a directory path) to a URI object.
      //File.toURI(): Converts a File object (a file on the filesystem) to a URI object
-
 }
