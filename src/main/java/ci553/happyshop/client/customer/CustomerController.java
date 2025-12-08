@@ -20,7 +20,7 @@ public class CustomerController {
     public void doAction(String action, Object[] object) throws SQLException, IOException {
         switch (action) {
             case "Add To Trolley":
-                cusModel.doAdd((Product) object[0], (int) object[1] );
+                cusModel.doAdd((Product) object[0], (int) object[1]);
                 break;
             case "Remove From Trolley":
                 cusModel.doRemove((Product) object[0]);
